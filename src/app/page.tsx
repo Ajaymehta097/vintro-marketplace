@@ -123,55 +123,60 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-stone-50">
+      
+      {/* 🌟 NAYA RESPONSIVE HEADER */}
       <header className="sticky top-0 z-10 border-b border-stone-200 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
+        {/* Container: Mobile par column (stack) aur Desktop par row banega */}
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between">
           
-          <div className="flex flex-1 items-center gap-6">
+          {/* Top Row (Mobile): Logo + Right Icons */}
+          <div className="flex items-center justify-between">
             {/* Logo */}
-            <h1 className="text-2xl font-black tracking-tighter text-teal-800 hidden md:block">VINTRO</h1>
+            <h1 className="text-2xl font-black tracking-tighter text-teal-800">VINTRO</h1>
             
-            <div className="flex w-full max-w-2xl items-center gap-2">
-              {/* 📍 Location Dropdown */}
-              <div className="flex h-10 items-center gap-1.5 rounded-l-lg border border-stone-200 bg-stone-50 px-3 hover:bg-stone-100 transition-colors">
-                <MapPin size={16} className="text-teal-700" />
-                <select 
-                  value={selectedLocation} 
-                  onChange={(e) => setSelectedLocation(e.target.value)} 
-                  className="bg-transparent text-sm font-bold text-stone-700 outline-none cursor-pointer w-20 md:w-24"
-                >
-                  {Array.from(new Set(cities)).map((city, index) => (
-                    <option key={index} value={city}>{city}</option>
-                  ))}
-                </select>
-                
-                {/* Auto-Detect GPS Button */}
-                <button 
-                  onClick={() => handleAutoLocation(false)} 
-                  title="Detect Current Location" 
-                  className={`text-stone-400 hover:text-teal-700 transition-colors ${isLocating ? 'animate-pulse text-teal-700' : ''}`}
-                >
-                  <LocateFixed size={14} />
-                </button>
-              </div>
-
-              {/* 🔍 Search Bar (Visual integration with Explore page) */}
-              <div 
-                onClick={() => router.push('/explore')}
-                className="flex h-10 flex-1 cursor-pointer items-center gap-2 rounded-r-lg border border-l-0 border-stone-200 bg-white px-4 text-stone-400 hover:bg-stone-50 transition-colors"
-              >
-                <Search size={16} />
-                <span className="text-sm">Search for 'vintage TV', 'denim jacket'...</span>
-              </div>
+            <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
+              <button onClick={() => router.push("/sell")} className="hidden md:flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-amber-700"><PlusCircle size={16} /> Sell</button>
+              <button onClick={() => router.push("/sell")} className="md:hidden rounded-full p-2 text-amber-600 bg-amber-50"><PlusCircle size={20} /></button>
+              <button onClick={() => router.push("/wishlist")} className="rounded-full p-2 text-stone-500 hover:bg-red-50 hover:text-red-500"><Heart size={20} /></button>
+              <button onClick={() => router.push("/profile")} className="rounded-full p-2 text-stone-500 hover:bg-stone-100"><User size={20} /></button>
+              <button onClick={() => supabase.auth.signOut()} className="rounded-full p-2 text-red-500 hover:bg-red-50"><LogOut size={20} /></button>
             </div>
           </div>
           
-          <div className="flex items-center gap-2 md:gap-4 ml-4">
-            <button onClick={() => router.push("/sell")} className="hidden md:flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-amber-700"><PlusCircle size={16} /> Sell</button>
-            <button onClick={() => router.push("/sell")} className="md:hidden rounded-full p-2 text-amber-600 bg-amber-50"><PlusCircle size={20} /></button>
-            <button onClick={() => router.push("/wishlist")} className="rounded-full p-2 text-stone-500 hover:bg-red-50 hover:text-red-500"><Heart size={20} /></button>
-            <button onClick={() => router.push("/profile")} className="rounded-full p-2 text-stone-500 hover:bg-stone-100"><User size={20} /></button>
-            <button onClick={() => supabase.auth.signOut()} className="rounded-full p-2 text-red-500 hover:bg-red-50"><LogOut size={20} /></button>
+          {/* Bottom Row (Mobile) / Middle (Desktop): Location & Search */}
+          <div className="flex w-full flex-1 items-center md:max-w-2xl">
+            {/* 📍 Location Dropdown */}
+            <div className="flex h-10 shrink-0 items-center gap-1.5 rounded-l-lg border border-stone-200 bg-stone-50 px-2 sm:px-3 hover:bg-stone-100 transition-colors">
+              <MapPin size={16} className="text-teal-700 shrink-0" />
+              <select 
+                value={selectedLocation} 
+                onChange={(e) => setSelectedLocation(e.target.value)} 
+                className="w-16 bg-transparent text-sm font-bold text-stone-700 outline-none cursor-pointer sm:w-20 md:w-24 truncate"
+              >
+                {Array.from(new Set(cities)).map((city, index) => (
+                  <option key={index} value={city}>{city}</option>
+                ))}
+              </select>
+              
+              <button 
+                onClick={() => handleAutoLocation(false)} 
+                title="Detect Current Location" 
+                className={`shrink-0 text-stone-400 hover:text-teal-700 transition-colors ${isLocating ? 'animate-pulse text-teal-700' : ''}`}
+              >
+                <LocateFixed size={14} />
+              </button>
+            </div>
+
+            {/* 🔍 Search Bar */}
+            <div 
+              onClick={() => router.push('/explore')}
+              className="flex h-10 flex-1 cursor-pointer items-center gap-2 overflow-hidden rounded-r-lg border border-l-0 border-stone-200 bg-white px-3 text-stone-400 transition-colors hover:bg-stone-50 sm:px-4"
+            >
+              <Search size={16} className="shrink-0" />
+              <span className="truncate text-sm">Search 'vintage TV'...</span>
+            </div>
           </div>
+
         </div>
       </header>
 
