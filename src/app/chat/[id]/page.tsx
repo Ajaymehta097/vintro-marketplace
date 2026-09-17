@@ -170,7 +170,8 @@ export default function ChatRoomPage() {
   let lastDateHeader = "";
 
   return (
-    <div className="flex flex-col h-screen bg-[#EFEAE2]"> {/* WhatsApp style background color */}
+    // 🎨 FIX 1: Container ki height adjust ki gayi hai taaki scrollbar sahi se kaam kare
+    <div className="flex flex-col h-[calc(100vh-70px)] md:h-screen bg-[#EFEAE2]">
       
       <header className="flex items-center justify-between border-b border-stone-200 bg-white px-4 py-3 shadow-sm z-10 shrink-0">
         <div className="flex items-center gap-3">
@@ -187,83 +188,86 @@ export default function ChatRoomPage() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 w-full mx-auto pb-20">
-        {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-stone-400">
-            <MessageSquare size={40} className="mb-2 opacity-40" />
-            <p className="text-sm bg-white/60 px-4 py-2 rounded-xl">No messages yet. Say hello to the seller! 👋</p>
-          </div>
-        ) : (
-          messages.map((msg) => {
-            const isMe = msg.sender_id === currentUser?.id;
-            const currentMsgDate = formatDateHeader(msg.created_at);
-            const showDateHeader = currentMsgDate !== lastDateHeader;
-            if (showDateHeader) lastDateHeader = currentMsgDate;
+      {/* 🎨 FIX 2: Messages ko max-w-4xl aur mx-auto dekar screen ke center mein fix kiya */}
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 w-full">
+        <div className="max-w-4xl mx-auto w-full space-y-4">
+          {messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-stone-400 mt-20">
+              <MessageSquare size={40} className="mb-2 opacity-40" />
+              <p className="text-sm bg-white/60 px-4 py-2 rounded-xl">No messages yet. Say hello to the seller! 👋</p>
+            </div>
+          ) : (
+            messages.map((msg) => {
+              const isMe = msg.sender_id === currentUser?.id;
+              const currentMsgDate = formatDateHeader(msg.created_at);
+              const showDateHeader = currentMsgDate !== lastDateHeader;
+              if (showDateHeader) lastDateHeader = currentMsgDate;
 
-            return (
-              <div key={msg.id} className="flex flex-col">
-                {showDateHeader && (
-                  <div className="flex justify-center my-4">
-                    <span className="bg-white/80 text-stone-600 text-xs font-medium px-3 py-1 rounded-lg shadow-sm">
-                      {currentMsgDate}
-                    </span>
-                  </div>
-                )}
-                
-                <div className={`flex ${isMe ? "justify-end" : "justify-start"} mb-2 group relative`}>
-                  <div className={`relative max-w-[75%] rounded-2xl px-3 py-2 text-sm shadow-sm ${isMe ? "bg-[#D9FDD3] text-stone-900 rounded-tr-none" : "bg-white text-stone-900 rounded-tl-none"}`}>
-                    
-                    {/* Media Rendering */}
-                    {msg.media_type === "image" && <img src={msg.media_url} className="w-full max-w-sm rounded-lg mb-2" alt="Uploaded photo" />}
-                    {msg.media_type === "video" && <video src={msg.media_url} controls className="w-full max-w-sm rounded-lg mb-2" />}
-                    {msg.media_type === "location" && (
-                      <a href={msg.media_url} target="_blank" className="flex items-center gap-2 bg-blue-50 text-blue-600 p-3 rounded-lg mb-2 hover:bg-blue-100">
-                        <MapPin size={20} /> View Location on Map
-                      </a>
-                    )}
-                    
-                    {/* Message Text */}
-                    {msg.text !== "📷 Media" && msg.text !== "📍 My Location" && (
-                      <p className="break-words pr-2">{msg.text}</p>
-                    )}
-
-                    {/* Time & Edited Status */}
-                    <div className={`flex items-center justify-end gap-1 mt-1 text-[10px] ${isMe ? "text-green-700/70" : "text-stone-400"}`}>
-                      {msg.is_edited && <span>(edited)</span>}
-                      <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              return (
+                <div key={msg.id} className="flex flex-col">
+                  {showDateHeader && (
+                    <div className="flex justify-center my-4">
+                      <span className="bg-white/80 text-stone-600 text-xs font-medium px-3 py-1 rounded-lg shadow-sm">
+                        {currentMsgDate}
+                      </span>
                     </div>
+                  )}
+                  
+                  <div className={`flex ${isMe ? "justify-end" : "justify-start"} mb-2 group relative`}>
+                    <div className={`relative max-w-[85%] sm:max-w-[75%] rounded-2xl px-3 py-2 text-sm shadow-sm ${isMe ? "bg-[#D9FDD3] text-stone-900 rounded-tr-none" : "bg-white text-stone-900 rounded-tl-none"}`}>
+                      
+                      {/* Media Rendering */}
+                      {msg.media_type === "image" && <img src={msg.media_url} className="w-full max-w-sm rounded-lg mb-2" alt="Uploaded photo" />}
+                      {msg.media_type === "video" && <video src={msg.media_url} controls className="w-full max-w-sm rounded-lg mb-2" />}
+                      {msg.media_type === "location" && (
+                        <a href={msg.media_url} target="_blank" className="flex items-center gap-2 bg-blue-50 text-blue-600 p-3 rounded-lg mb-2 hover:bg-blue-100">
+                          <MapPin size={20} /> View Location on Map
+                        </a>
+                      )}
+                      
+                      {/* Message Text */}
+                      {msg.text !== "📷 Media" && msg.text !== "📍 My Location" && (
+                        <p className="break-words pr-2">{msg.text}</p>
+                      )}
 
-                    {/* 3-Dot Menu for Edit/Delete (Only for own messages) */}
-                    {isMe && (
-                      <button onClick={() => setActiveMenuId(activeMenuId === msg.id ? null : msg.id)} className="absolute -left-6 top-2 opacity-0 group-hover:opacity-100 text-stone-400 hover:text-stone-700 transition-opacity">
-                        <MoreVertical size={16} />
-                      </button>
-                    )}
-
-                    {/* Dropdown Menu */}
-                    {activeMenuId === msg.id && (
-                      <div className="absolute -left-32 top-6 bg-white shadow-lg rounded-xl border border-stone-100 overflow-hidden z-20 flex flex-col w-28">
-                        {msg.media_type === null && (
-                          <button onClick={() => { setEditingMsgId(msg.id); setNewMessage(msg.text); setActiveMenuId(null); }} className="flex items-center gap-2 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50">
-                            <Edit2 size={14} /> Edit
-                          </button>
-                        )}
-                        <button onClick={() => handleDeleteMessage(msg.id)} className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50">
-                          <Trash2 size={14} /> Delete
-                        </button>
+                      {/* Time & Edited Status */}
+                      <div className={`flex items-center justify-end gap-1 mt-1 text-[10px] ${isMe ? "text-green-700/70" : "text-stone-400"}`}>
+                        {msg.is_edited && <span>(edited)</span>}
+                        <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
-                    )}
+
+                      {/* 3-Dot Menu for Edit/Delete (Only for own messages) */}
+                      {isMe && (
+                        <button onClick={() => setActiveMenuId(activeMenuId === msg.id ? null : msg.id)} className="absolute -left-6 top-2 opacity-0 group-hover:opacity-100 text-stone-400 hover:text-stone-700 transition-opacity">
+                          <MoreVertical size={16} />
+                        </button>
+                      )}
+
+                      {/* Dropdown Menu */}
+                      {activeMenuId === msg.id && (
+                        <div className="absolute -left-32 top-6 bg-white shadow-lg rounded-xl border border-stone-100 overflow-hidden z-20 flex flex-col w-28">
+                          {msg.media_type === null && (
+                            <button onClick={() => { setEditingMsgId(msg.id); setNewMessage(msg.text); setActiveMenuId(null); }} className="flex items-center gap-2 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50">
+                              <Edit2 size={14} /> Edit
+                            </button>
+                          )}
+                          <button onClick={() => handleDeleteMessage(msg.id)} className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50">
+                            <Trash2 size={14} /> Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })
-        )}
-        <div ref={messagesEndRef} />
+              );
+            })
+          )}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
-      {/* Message Input Container */}
-      <div className="absolute bottom-0 left-0 w-full bg-[#EFEAE2] p-2 sm:p-4">
+      {/* 🎨 FIX 3: Input box se 'absolute bottom-0 w-full' hata kar 'shrink-0' lagaya taaki sidebar overlap na ho */}
+      <div className="shrink-0 bg-[#EFEAE2] p-3 sm:p-4 border-t border-stone-200">
         {editingMsgId && (
           <div className="mx-auto max-w-4xl bg-white rounded-t-xl px-4 py-2 border-b border-stone-100 flex justify-between items-center text-sm text-teal-800 font-medium">
             <span>Editing message...</span>
@@ -271,14 +275,14 @@ export default function ChatRoomPage() {
           </div>
         )}
         
-        <form onSubmit={handleSendMessage} className="mx-auto flex max-w-4xl items-center gap-2">
+        <form onSubmit={handleSendMessage} className={`mx-auto flex max-w-4xl items-center gap-2 ${editingMsgId ? 'pt-2' : ''}`}>
           
-          <button type="button" onClick={() => fileInputRef.current?.click()} className="p-3 text-stone-500 bg-white rounded-full hover:bg-stone-50 shadow-sm" disabled={isUploading}>
+          <button type="button" onClick={() => fileInputRef.current?.click()} className="p-3 text-stone-500 bg-white rounded-full hover:bg-stone-50 shadow-sm shrink-0" disabled={isUploading}>
             <Paperclip size={20} />
           </button>
           <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*,video/*" className="hidden" />
 
-          <button type="button" onClick={handleSendLocation} className="p-3 text-stone-500 bg-white rounded-full hover:bg-stone-50 shadow-sm" disabled={isUploading}>
+          <button type="button" onClick={handleSendLocation} className="p-3 text-stone-500 bg-white rounded-full hover:bg-stone-50 shadow-sm shrink-0" disabled={isUploading}>
             <MapPin size={20} />
           </button>
 
@@ -286,10 +290,11 @@ export default function ChatRoomPage() {
             type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)}
             placeholder={isUploading ? "Uploading..." : "Type a message"}
             disabled={isUploading}
-            className="flex-1 rounded-full border-0 bg-white px-5 py-3.5 text-sm text-stone-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/20"
+            className="flex-1 rounded-full border-0 bg-white px-5 py-3.5 text-sm text-stone-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/20 w-full"
           />
           
-          <button type="submit" disabled={isUploading || !newMessage.trim()} className="flex h-12 w-12 items-center justify-center rounded-full bg-teal-800 text-white shadow-sm hover:bg-teal-900 disabled:opacity-50 transition-all">
+          {/* Send button mein shrink-0 add kiya taaki choti screen par pichke nahi */}
+          <button type="submit" disabled={isUploading || !newMessage.trim()} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-teal-800 text-white shadow-sm hover:bg-teal-900 disabled:opacity-50 transition-all">
             <Send size={20} className="ml-1" />
           </button>
         </form>

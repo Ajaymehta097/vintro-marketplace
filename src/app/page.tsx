@@ -124,34 +124,31 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-stone-50">
       
-      {/* 🌟 NAYA RESPONSIVE HEADER */}
-      <header className="sticky top-0 z-10 border-b border-stone-200 bg-white shadow-sm">
-        {/* Container: Mobile par column (stack) aur Desktop par row banega */}
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between">
+      {/* 🌟 UPDATED HEADER: Logo aur extra buttons ab desktop par hide ho jayenge (md:hidden) */}
+      <header className="sticky top-0 z-10 bg-white md:bg-transparent md:pt-4 md:pb-2">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-center">
           
-          {/* Top Row (Mobile): Logo + Right Icons */}
-          <div className="flex items-center justify-between">
-            {/* Logo */}
+          {/* Top Row (Mobile Only): Logo + Right Icons */}
+          <div className="flex items-center justify-between md:hidden">
             <h1 className="text-2xl font-black tracking-tighter text-teal-800">VINTRO</h1>
             
-            <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
-              <button onClick={() => router.push("/sell")} className="hidden md:flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-amber-700"><PlusCircle size={16} /> Sell</button>
-              <button onClick={() => router.push("/sell")} className="md:hidden rounded-full p-2 text-amber-600 bg-amber-50"><PlusCircle size={20} /></button>
+            <div className="flex items-center gap-1 sm:gap-2">
+              <button onClick={() => router.push("/sell")} className="rounded-full p-2 text-amber-600 bg-amber-50"><PlusCircle size={20} /></button>
               <button onClick={() => router.push("/wishlist")} className="rounded-full p-2 text-stone-500 hover:bg-red-50 hover:text-red-500"><Heart size={20} /></button>
               <button onClick={() => router.push("/profile")} className="rounded-full p-2 text-stone-500 hover:bg-stone-100"><User size={20} /></button>
               <button onClick={() => supabase.auth.signOut()} className="rounded-full p-2 text-red-500 hover:bg-red-50"><LogOut size={20} /></button>
             </div>
           </div>
           
-          {/* Bottom Row (Mobile) / Middle (Desktop): Location & Search */}
-          <div className="flex w-full flex-1 items-center md:max-w-2xl">
+          {/* Bottom Row (Mobile) / Center Filter (Desktop): Location & Search */}
+          <div className="flex w-full flex-1 items-center md:max-w-3xl shadow-sm md:shadow-md rounded-xl">
             {/* 📍 Location Dropdown */}
-            <div className="flex h-10 shrink-0 items-center gap-1.5 rounded-l-lg border border-stone-200 bg-stone-50 px-2 sm:px-3 hover:bg-stone-100 transition-colors">
-              <MapPin size={16} className="text-teal-700 shrink-0" />
+            <div className="flex h-12 shrink-0 items-center gap-1.5 rounded-l-xl border border-stone-200 bg-white px-2 sm:px-4 hover:bg-stone-50 transition-colors">
+              <MapPin size={18} className="text-teal-700 shrink-0" />
               <select 
                 value={selectedLocation} 
                 onChange={(e) => setSelectedLocation(e.target.value)} 
-                className="w-16 bg-transparent text-sm font-bold text-stone-700 outline-none cursor-pointer sm:w-20 md:w-24 truncate"
+                className="w-16 bg-transparent text-sm font-bold text-stone-700 outline-none cursor-pointer sm:w-24 md:w-32 truncate"
               >
                 {Array.from(new Set(cities)).map((city, index) => (
                   <option key={index} value={city}>{city}</option>
@@ -163,16 +160,16 @@ export default function Home() {
                 title="Detect Current Location" 
                 className={`shrink-0 text-stone-400 hover:text-teal-700 transition-colors ${isLocating ? 'animate-pulse text-teal-700' : ''}`}
               >
-                <LocateFixed size={14} />
+                <LocateFixed size={16} />
               </button>
             </div>
 
             {/* 🔍 Search Bar */}
             <div 
               onClick={() => router.push('/explore')}
-              className="flex h-10 flex-1 cursor-pointer items-center gap-2 overflow-hidden rounded-r-lg border border-l-0 border-stone-200 bg-white px-3 text-stone-400 transition-colors hover:bg-stone-50 sm:px-4"
+              className="flex h-12 flex-1 cursor-pointer items-center gap-2 overflow-hidden rounded-r-xl border border-l-0 border-stone-200 bg-white px-3 text-stone-400 transition-colors hover:bg-stone-50 sm:px-4"
             >
-              <Search size={16} className="shrink-0" />
+              <Search size={18} className="shrink-0" />
               <span className="truncate text-sm">Search 'vintage TV'...</span>
             </div>
           </div>
@@ -193,7 +190,10 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {displayProducts.map((product) => {
+            
+            {/* 🌟 CHANGE 1: product ke saath 'index' add kiya */}
+            {displayProducts.map((product, index) => {
+              
               const isLiked = wishlist.includes(product.id);
               return (
                 <div key={product.id} onClick={() => router.push(`/product/${product.id}`)} className="group relative overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm hover:shadow-md cursor-pointer flex flex-col h-full">
@@ -201,14 +201,16 @@ export default function Home() {
                     <Heart size={18} className={isLiked ? "fill-red-500 text-red-500" : ""} />
                   </button>
                   <div className="relative aspect-square overflow-hidden bg-stone-100 shrink-0">
-                    {/* 🌟 NAYA: Next.js Image component added here */}
+                    
                     <Image 
-                      src={product.image_url || "https://placehold.co/400x400/eeeeee/999999?text=No+Image"} 
+                      src={product.image_url || "https://placehold.co/400x400/eeeeee/999999.png?text=No+Image"} 
                       alt={product.title} 
                       fill
+                      priority={index < 4} /* 🌟 CHANGE 2: Yeh line image warning hatayegi */
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       className="object-cover group-hover:scale-105 transition-transform" 
                     />
+
                   </div>
                   <div className="p-4 flex flex-col grow">
                     <h3 className="truncate text-lg font-bold text-stone-900">₹{product.price}</h3>

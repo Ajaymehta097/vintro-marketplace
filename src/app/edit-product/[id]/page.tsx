@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Save, ArrowLeft, MapPin, LocateFixed, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Save, ArrowLeft, MapPin, LocateFixed, Loader2, ImagePlus } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
@@ -23,9 +23,13 @@ export default function EditProductPage() {
   const [location, setLocation] = useState(""); 
   const [description, setDescription] = useState("");
   const [coverImage, setCoverImage] = useState("");
+  
+  // 🌟 NAYE STATES PHOTO UPLOAD KE LIYE
+  const [newImageFile, setNewImageFile] = useState<File | null>(null);
+  const [previewImage, setPreviewImage] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [cities, setCities] = useState(["Mandsaur", "Neemuch", "Ratlam", "Indore", "Ujjain", "Bhopal", "Chittorgarh", "Jaipur", "Delhi", "Mumbai"]);
-  
   const defaultCategories = ["Old Money", "Vintage TV", "Denim", "Vinyl Records", "Furniture", "Cameras", "Watches"];
 
   useEffect(() => {
@@ -41,7 +45,6 @@ export default function EditProductPage() {
       }
       setUser(session.user);
 
-      // Database se product nikalo
       const { data: product, error } = await supabase
         .from("products")
         .select("*")
@@ -50,22 +53,20 @@ export default function EditProductPage() {
 
       if (error) throw error;
 
-      // Security Check: Sirf seller hi edit kar sake
       if (product.seller_id !== session.user.id) {
         alert("You are not authorized to edit this product.");
         router.push("/profile");
         return;
       }
 
-      // States ko pre-fill karo
       setTitle(product.title);
       setPrice(product.price.toString());
       setCondition(product.condition);
       setLocation(product.location);
       setDescription(product.description);
       setCoverImage(product.image_url);
+      setPreviewImage(product.image_url); // Preview mein purani photo set karo
 
-      // Category Logic: Agar default list mein nahi hai, toh 'Other' select karke custom text box mein daalo
       if (defaultCategories.includes(product.category)) {
         setCategory(product.category);
       } else {
@@ -73,7 +74,6 @@ export default function EditProductPage() {
         setCustomCategory(product.category);
       }
 
-      // Agar nayi city hai toh list mein add karo
       if (!cities.includes(product.location)) {
         setCities([product.location, ...cities]);
       }
@@ -121,13 +121,43 @@ export default function EditProductPage() {
     }
   };
 
+  // 🌟 NAYA FUNCTION: Photo select karte hi preview dikhane ke liye
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setNewImageFile(file);
+      setPreviewImage(URL.createObjectURL(file));
+    }
+  };
+
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
       const finalCategory = category === "Other" ? customCategory : category;
+      let finalImageUrl = coverImage; // By default purani photo rakhein
 
+      // 🌟 AGAR NAYI PHOTO CHUNI HAI, TOH PEHLE UPLOAD KARO
+      if (newImageFile) {
+        const fileExt = newImageFile.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("product_images")
+          .upload(filePath, newImageFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage
+          .from("product_images")
+          .getPublicUrl(filePath);
+
+        finalImageUrl = publicUrlData.publicUrl; // Nayi photo ka URL set karo
+      }
+
+      // 🌟 DATABASE UPDATE KARO
       const { error } = await supabase
         .from("products")
         .update({
@@ -137,7 +167,7 @@ export default function EditProductPage() {
           condition: condition,
           location: location,
           description: description,
-          updated_at: new Date(),
+          image_url: finalImageUrl, // Yahan photo update hogi
         })
         .eq("id", id);
 
@@ -171,12 +201,33 @@ export default function EditProductPage() {
 
       <form onSubmit={handleUpdate} className="space-y-6 rounded-xl border border-stone-200 bg-white p-6 shadow-sm md:p-8">
         
-        {/* Read-only Cover Image Display */}
+        {/* 🌟 NAYA: INTERACTIVE IMAGE UPLOAD SECTION */}
         <div className="flex items-center gap-4 rounded-lg border border-stone-200 bg-stone-50 p-4">
-          <img src={coverImage} alt="Cover" className="h-16 w-16 rounded-md object-cover shadow-sm" />
-          <div>
-            <p className="text-xs font-bold text-stone-500 uppercase tracking-wider">Current Image</p>
-            <p className="text-sm text-stone-700">Images cannot be changed currently.</p>
+          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md border border-stone-200 bg-white shadow-sm">
+            <img src={previewImage || "https://placehold.co/400x400/eeeeee/999999.png?text=No+Image"} alt="Cover" className="h-full w-full object-cover" />
+          </div>
+          <div className="flex flex-1 flex-col items-start gap-2">
+            <div>
+              <p className="text-xs font-bold text-stone-500 uppercase tracking-wider">Product Image</p>
+              <p className="text-sm text-stone-600">Upload a new photo to replace the current one.</p>
+            </div>
+            
+            {/* Hidden File Input */}
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleImageSelect} 
+              accept="image/*" 
+              className="hidden" 
+            />
+            
+            <button 
+              type="button" 
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-2 rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm font-medium text-stone-700 shadow-sm transition-colors hover:bg-stone-100"
+            >
+              <ImagePlus size={16} /> Change Photo
+            </button>
           </div>
         </div>
 
@@ -236,7 +287,7 @@ export default function EditProductPage() {
                 {isLocating ? "Locating..." : "Auto Detect"}
               </button>
             </label>
-            <select value={location} onChange={(e) => setLocation(e.target.value)} className="w-full rounded-lg border border-stone-200 bg-stone-50 px-4 py-3 text-sm focus:border-teal-700 focus:bg-white outline-none">
+            <select value={location || ""} onChange={(e) => setLocation(e.target.value)} className="w-full rounded-lg border border-stone-200 bg-stone-50 px-4 py-3 text-sm focus:border-teal-700 focus:bg-white outline-none">
               {cities.map(city => <option key={city} value={city}>{city}</option>)}
             </select>
           </div>
